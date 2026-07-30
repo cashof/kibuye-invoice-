@@ -1,0 +1,8 @@
+BETTER_AUTH_SECRET=r46xuIMMxs6aO6tOEQu1UKpLOU7ZtJuU
+
+BETTER_AUTH_URL=http://localhost:3000 
+
+DATABASE_URL='postgresql://neondb_owner:npg_oUjd0r9ykznx@ep-odd-cloud-ax6abxkn-pooler.c-4.us-east-2.aws.neon.tech/neondb?sslmode=require&channel_binding=require'
+
+GOOGLE_CLIENT_ID= 624692117973-1uuucok6d17tv8ql6o1msssob4s2m7rd.apps.googleusercontent.com
+GOOGLE_CLIENT_SECRET= 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

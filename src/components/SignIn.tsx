@@ -45,7 +45,7 @@ export function SignIn() {
             <h1 className="text-xl font-bold">Welcome to Acme Inc.</h1>
           </div>
 
-          <Field className="flex flex-1">
+          <Field className="flex flex-1 ">
             <Button
               variant="default"
               type="button"

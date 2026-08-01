@@ -1,8 +1,8 @@
 "use server"
-import { userType } from "@/db/schema";
+import { companies, userType } from "@/db/schema";
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
-import { UserTypeType } from "@/utils/types";
+import { onboardingcompanyType, UserTypeType } from "@/utils/types";
 
 
 import { headers } from "next/headers";
@@ -25,4 +25,25 @@ export async function userTypeAction(data: UserTypeType){
     return {
       success: true,
     };
+}
+
+
+export async function onboardingCompanyAction(data: onboardingcompanyType){
+  const session = await auth.api.getSession({
+    headers: await headers(),
+  });
+  if (!session) {
+    throw new Error("Unauthorized");
+  }
+  await db.insert(companies).values({
+    ownerId: session.user.id,
+    name: data.name,
+    telephoneNumber: data.telephoneNumber,
+    location: data.location,
+    description: data.description,
+    logo: data.logo,
+    POBox: data.POBox,
+    
+  });
+
 }

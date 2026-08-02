@@ -12,6 +12,7 @@ import {
   unique,
 } from "drizzle-orm/pg-core";
 import { user } from "./auth-schema";
+import { number } from "zod";
 
 //  ENUMS
 export const userTypeEnum = pgEnum("user_type", [
@@ -114,6 +115,10 @@ export const invoice = pgTable(
       .defaultNow()
       .$onUpdate(() => new Date())
       .notNull(),
+    invoiceNumber: numeric("invoice_number", { precision: 12, scale: 2 })
+      .default("0")
+      .notNull(),
+    invoiceDescription: text("invoice_description"),
   },
   (table) => [
     index("invoice_companyId_idx").on(table.companyId),

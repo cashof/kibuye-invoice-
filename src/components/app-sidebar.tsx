@@ -12,7 +12,8 @@ import {
 } from "@/components/ui/sidebar";
 import { Folder } from "lucide-react";
 import { auth } from "@/lib/auth";
-import { userCompany } from "@/app/(private)/dashboard/actions";
+import { userCompany } from "@/app/(private)/dashboard/components/actions";
+import NavSidebar from "./navSidebar";
 
 export async function AppSidebar({
   ...props
@@ -41,7 +42,9 @@ export async function AppSidebar({
           </SidebarMenuItem>
         </SidebarMenu>
       </SidebarHeader>
-      <SidebarContent></SidebarContent>
+      <SidebarContent>
+        <NavSidebar />
+      </SidebarContent>
       <SidebarFooter>
         <NavUser
           image={session?.user.image as string}

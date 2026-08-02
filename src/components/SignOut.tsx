@@ -23,19 +23,19 @@ export default function SignOut() {
   return (
     <div>
       <Button
-        variant={"outline"}
+        variant={"ghost"}
         onClick={signout}
-        className={"flex justify-center items-center flex-1"}
+        className={"flex flex-1 justify-start items-center w-full"}
         disabled={isloading}
       >
         {isloading ? (
-          <div className="flex flex-1 justify-center items-center gap-2">
+          <div className="flex flex-1 justify-start items-center gap-2">
             <LogOut />
             SignOut
             <Spinner />
           </div>
         ) : (
-          <div className="flex flex-1 justify-center items-center gap-2">
+          <div className="flex flex-1 justify-start items-center gap-2">
             <LogOut />
             SignOut
           </div>

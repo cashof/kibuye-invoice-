@@ -7,15 +7,13 @@ import {
   timestamp,
   pgEnum,
   index,
-  uniqueIndex,
   uuid,
   primaryKey,
+  unique,
 } from "drizzle-orm/pg-core";
-
 import { user } from "./auth-schema";
 
-// ================= ENUMS =================
-
+//  ENUMS
 export const userTypeEnum = pgEnum("user_type", [
   "client",
   "employee",
@@ -29,81 +27,61 @@ export const invoiceStatusEnum = pgEnum("invoice_status", [
   "cancelled",
 ]);
 
-// ================= USER ON COMPANY (JOIN TABLE) =================
-
+//  USER TYPE (role of a user in the system — NOT tied to a company)
 export const userType = pgTable(
   "user_types",
   {
     userId: text("user_id")
       .notNull()
-      .references(() => user.id, {
-        onDelete: "cascade",
-      }),
-
-    companyId: uuid("company_id")
-      .notNull()
-      .references(() => companies.id, {
-        onDelete: "cascade",
-      }),
+      .references(() => user.id, { onDelete: "cascade" }),
 
     usertype: userTypeEnum().notNull(),
-
     createdAt: timestamp("created_at").defaultNow().notNull(),
   },
   (table) => [
-    primaryKey({ columns: [table.userId, table.companyId] }),
+    primaryKey({ columns: [table.userId] }),
     index("user_types_user_id_idx").on(table.userId),
-    index("user_types_company_id_idx").on(table.companyId),
   ],
 );
 
-// ================= COMPANIES =================
-
-export const companies = pgTable(
-  "companies",
+//  COMPANY (belongs to exactly one user — the admin/owner)
+export const company = pgTable(
+  "company",
   {
     id: uuid("id").defaultRandom().primaryKey(),
-
     name: text("name").notNull(),
-    description: text("descirption"),
-
+    description: text("description"),
     logo: text("logo"),
     location: text("location"),
     POBox: text("p.o.box"),
     telephoneNumber: text("telephone").notNull(),
     ownerId: text("owner_id")
       .notNull()
-      .references(() => user.id, {
-        onDelete: "cascade",
-      }),
+      .references(() => user.id, { onDelete: "cascade" }),
     createdAt: timestamp("created_at").defaultNow().notNull(),
     updatedAt: timestamp("updated_at")
       .defaultNow()
       .$onUpdate(() => new Date())
       .notNull(),
   },
-  (table) => [index("companies_ownerId_idx").on(table.ownerId)],
+  (table) => [
+    // Enforces "one user -> one company"
+    unique("company_owner_id_unique").on(table.ownerId),
+    index("company_owner_id_idx").on(table.ownerId),
+  ],
 );
 
-// ================= PRODUCTS =================
-
+//  PRODUCTS
 export const products = pgTable(
   "products",
   {
     id: uuid("id").defaultRandom().primaryKey(),
-
     companyId: uuid("company_id")
       .notNull()
-      .references(() => companies.id, {
-        onDelete: "cascade",
-      }),
-
+      .references(() => company.id, { onDelete: "cascade" }),
     name: text("name").notNull(),
-
     description: text("description"),
-
     createdAt: timestamp("created_at").defaultNow().notNull(),
-
     updatedAt: timestamp("updated_at")
       .defaultNow()
       .$onUpdate(() => new Date())
@@ -112,44 +90,26 @@ export const products = pgTable(
   (table) => [index("products_companyId_idx").on(table.companyId)],
 );
 
-// ================= INVOICES =================
-
+//  INVOICES
 export const invoice = pgTable(
   "invoices",
   {
     id: uuid("id").defaultRandom().primaryKey(),
-
     companyId: uuid("company_id")
       .notNull()
-      .references(() => companies.id, {
-        onDelete: "cascade",
-      }),
-
+      .references(() => company.id, { onDelete: "cascade" }),
     createdBy: text("created_by")
       .notNull()
-      .references(() => user.id, {
-        onDelete: "restrict",
-      }),
-
+      .references(() => user.id, { onDelete: "restrict" }),
     clientId: text("client_id")
       .notNull()
-      .references(() => user.id, {
-        onDelete: "restrict",
-      }),
-
+      .references(() => user.id, { onDelete: "restrict" }),
     status: invoiceStatusEnum().default("draft").notNull(),
-
-    totalAmount: numeric("total_amount", {
-      precision: 12,
-      scale: 2,
-    })
+    totalAmount: numeric("total_amount", { precision: 12, scale: 2 })
       .default("0")
       .notNull(),
-
     dueDate: timestamp("due_date"),
-
     createdAt: timestamp("created_at").defaultNow().notNull(),
-
     updatedAt: timestamp("updated_at")
       .defaultNow()
       .$onUpdate(() => new Date())
@@ -162,33 +122,20 @@ export const invoice = pgTable(
   ],
 );
 
-// ================= INVOICE ITEMS =================
-
+//  INVOICE ITEMS
 export const invoiceItem = pgTable(
   "invoice_items",
   {
     id: uuid("id").defaultRandom().primaryKey(),
-
     invoiceId: uuid("invoice_id")
       .notNull()
-      .references(() => invoice.id, {
-        onDelete: "cascade",
-      }),
-
+      .references(() => invoice.id, { onDelete: "cascade" }),
     productId: uuid("product_id")
       .notNull()
-      .references(() => products.id, {
-        onDelete: "restrict",
-      }),
-
+      .references(() => products.id, { onDelete: "restrict" }),
     description: text("description").notNull(),
-
     quantity: integer("quantity").default(1).notNull(),
-
-    unitPrice: numeric("unit_price", {
-      precision: 12,
-      scale: 2,
-    }).notNull(),
+    unitPrice: numeric("unit_price", { precision: 12, scale: 2 }).notNull(),
   },
   (table) => [
     index("invoice_item_invoiceId_idx").on(table.invoiceId),
@@ -196,49 +143,31 @@ export const invoiceItem = pgTable(
   ],
 );
 
-// ================= DRIZZLE RELATIONS =================
-
-export const companiesRelations = relations(companies, ({ many, one }) => ({
-  users: many(userType),
+//  DRIZZLE RELATIONS
+export const companyRelations = relations(company, ({ many, one }) => ({
   products: many(products),
   invoices: many(invoice),
-  owner: one(user, {
-    fields: [companies.ownerId],
-    references: [user.id],
-  }),
+  owner: one(user, { fields: [company.ownerId], references: [user.id] }),
 }));
 
 export const userTypeRelations = relations(userType, ({ one }) => ({
-  user: one(user, {
-    fields: [userType.userId],
-    references: [user.id],
-  }),
-  company: one(companies, {
-    fields: [userType.companyId],
-    references: [companies.id],
-  }),
+  user: one(user, { fields: [userType.userId], references: [user.id] }),
 }));
 
 export const productRelations = relations(products, ({ one }) => ({
-  company: one(companies, {
+  company: one(company, {
     fields: [products.companyId],
-    references: [companies.id],
+    references: [company.id],
   }),
 }));
 
 export const invoiceRelations = relations(invoice, ({ one, many }) => ({
-  company: one(companies, {
+  company: one(company, {
     fields: [invoice.companyId],
-    references: [companies.id],
+    references: [company.id],
   }),
-  creator: one(user, {
-    fields: [invoice.createdBy],
-    references: [user.id],
-  }),
-  client: one(user, {
-    fields: [invoice.clientId],
-    references: [user.id],
-  }),
+  creator: one(user, { fields: [invoice.createdBy], references: [user.id] }),
+  client: one(user, { fields: [invoice.clientId], references: [user.id] }),
   items: many(invoiceItem),
 }));
 

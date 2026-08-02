@@ -1,5 +1,4 @@
-import {  z } from "zod";
-
+import { email, z } from "zod";
 
 export const usertypeSchema = z.object({
   usertype: z.enum(["client", "employee", "admin"]),
@@ -21,9 +20,8 @@ export const invoiceSchema = z.object({
 export const userDataSchema = z.object({
   name: z.string(),
   image: z.string(),
+  email: z.string(),
 });
-
-import { z } from "zod";
 
 export const onboardingcompanySchema = z.object({
   name: z.string().min(2, "Company name is required."),
@@ -48,4 +46,4 @@ export type onboardingcompanyType = z.infer<typeof onboardingcompanySchema>;
 export type userDataType = z.infer<typeof userDataSchema>;
 export type InvoiceType = z.infer<typeof invoiceSchema>;
 export type InvoiceItemType = z.infer<typeof invoiceItemSchema>;
-export type UserTypeType =  z.infer<typeof usertypeSchema>
+export type UserTypeType = z.infer<typeof usertypeSchema>;

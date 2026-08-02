@@ -44,9 +44,6 @@ export default function LayoutComponent({ name, image }: userDataType) {
 
       <div className=" hidden md:flex flex-col gap-6">
         <div className="space-y-2">
-          <h1 className="text-3xl font-extrabold leading-tight text-foreground">
-            Welcome to <br /> InvoSend
-          </h1>
           <p className="text-muted-foreground text-sm max-w-xs">
             Let's get your account set up so you can start sending invoices
             right away.

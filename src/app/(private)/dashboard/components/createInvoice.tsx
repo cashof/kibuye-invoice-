@@ -1,131 +1,164 @@
 "use client";
-
-import * as React from "react";
-
-import { useIsMobile } from "@/hooks/use-mobile";
-
 import { Button } from "@/components/ui/button";
 import {
-  Drawer,
-  DrawerClose,
-  DrawerContent,
-  DrawerDescription,
-  DrawerFooter,
-  DrawerHeader,
-  DrawerTitle,
-  DrawerTrigger,
-} from "@/components/ui/drawer";
-
-import { toast } from "@/components/ui/toast";
-import { PlusCircle } from "lucide-react";
-import { Controller, useForm } from "react-hook-form";
-import { invoiceSchema, invoiceType } from "@/utils/types";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { Separator } from "@/components/ui/separator";
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
 import {
   Field,
-  FieldContent,
-  FieldDescription,
   FieldError,
   FieldGroup,
   FieldLabel,
-  FieldSet,
 } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectLabel,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Separator } from "@/components/ui/separator";
+import { invoiceSchema, invoiceType } from "@/utils/types";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { Domain } from "domain";
+import { Plus } from "lucide-react";
+import { Days_One } from "next/font/google";
+import React from "react";
+import { Controller, useForm } from "react-hook-form";
 
-export function CreateInvoice() {
-  const [open, setOpen] = React.useState(false);
+export default function CreateInvoice() {
+  const statuses = [
+    { label: "Draft", value: "draft" },
+    { label: "cancelled", value: "cancelled" },
+    { label: "Paid", value: "paid" },
+    { label: "Sent", value: "sent" },
+  ] as const;
 
-  const isMobile = useIsMobile();
   const form = useForm<invoiceType>({
     mode: "onBlur",
     resolver: zodResolver(invoiceSchema),
     defaultValues: {
       due_date: "",
-      invoiceNumber: undefined,
-      items: [],
-      status: undefined,
-      totalAmount: undefined,
+      invoiceNumber: 0,
+      items: [
+        {
+          name: "",
+          price: 0,
+          quantity: 1,
+        },
+      ],
+      status: "draft",
+      totalAmount: 0,
       invoiceDescription: "",
     },
   });
-
- 
-     function onSubmit(data: invoiceType) {
-      
-
-    setOpen(false);
-    toast.add({
-      title: "Delivery time confirmed",
-      description: (
-           <pre className="mt-2  overflow-x-auto rounded-md bg-code p-4 text-code-foreground">
-             <code>{JSON.stringify(data, null, 2)}</code>
-           </pre>
-         ),
-    
-        
-    });
-}
-
-
   return (
-    <Drawer
-      open={open}
-      onOpenChange={setOpen}
-      showSwipeHandle={isMobile}
-      swipeDirection={isMobile ? "down" : "right"}
-    >
-      <form onClick={form.handleSubmit(onSubmit)}>
-        <DrawerTrigger
+    <div>
+      <Dialog>
+        <DialogTrigger
           render={
-            <Button variant="default">
-              Create Invoice <PlusCircle size={12} />
+            <Button>
+              New Invoice <Plus size={14} />
             </Button>
           }
         />
-        <DrawerContent className="md:w-1/2 py-4">
-          <DrawerHeader>
-            <DrawerTitle>Create and share Invoices</DrawerTitle>
-            <DrawerDescription>
-              Through this you can generate share and download invoices at the
-              same time
-            </DrawerDescription>
-          </DrawerHeader>
-          <Separator className="my-4" />
-
-          <div className="flex-1 scroll overflow-y-auto p-4">
-            <FieldGroup>
-              <Controller
-                name="invoiceNumber"
-                control={form.control}
-                render={({ field, fieldState }) => (
-                  <Field data-invalid={fieldState.invalid}>
-      
-                    <div className=" flex flex-col md:flex-row md:items-center justify-center md:justify-between">
-                      <FieldLabel htmlFor={field.name}>Invoice Number</FieldLabel>
-                      <div className="md:w-2/3">
-                        <Input
+        <DialogContent className={""}>
+          <DialogHeader>
+            <DialogTitle>Create new invoice</DialogTitle>
+            <DialogDescription>
+              invoice created in this form will be reflected on the dashboard
+            </DialogDescription>
+          </DialogHeader>
+          <Separator className={"my-2"} />
+          <div className="">
+            <form action="">
+              <FieldGroup className="gap-3">
+                <Controller
+                  name="invoiceNumber"
+                  control={form.control}
+                  render={({ field, fieldState }) => (
+                    <Field data-invalid={fieldState.invalid}>
+                      <FieldLabel>Invoice Number</FieldLabel>
+                      <Input
                         {...field}
-                        id={field.name}
+                        placeholder="123"
                         aria-invalid={fieldState.invalid}
-                         placeholder="123" />
-                        {fieldState.invalid && <FieldError errors={[fieldState.error]}/>}
-                      </div>
-                    </div>
-                  </Field>
-                )}
-              />
-              
-            </FieldGroup>
-          </div>
+                        onChange={(e) => field.onChange(Number(e.target.value))}
+                      />
+                      {fieldState.error && (
+                        <FieldError errors={[fieldState.error]} />
+                      )}
+                    </Field>
+                  )}
+                />
 
-          <DrawerFooter className="flex flex-row justify-end-safe items-center">
-            <DrawerClose render={<Button variant="outline">Cancel</Button>} />
-            <Button type="submit">Save</Button>
-            <Button>Save and share</Button>
-          </DrawerFooter>
-        </DrawerContent>
-      </form>
-    </Drawer>
+                <Controller
+                  name="invoiceDescription"
+                  control={form.control}
+                  render={({ field, fieldState }) => (
+                    <Field data-invalid={fieldState.invalid}>
+                      <FieldLabel>Description (optional)</FieldLabel>
+                      <Input
+                        {...field}
+                        placeholder="from invoSend ltd"
+                        aria-invalid={fieldState.invalid}
+                      />
+                      {fieldState.error && (
+                        <FieldError errors={[fieldState.error]} />
+                      )}
+                    </Field>
+                  )}
+                />
+                <Separator className={"my-2"} />
+
+                <Controller
+                  name="status"
+                  control={form.control}
+                  render={({ field, fieldState }) => (
+                    <Field
+                      data-invalid={fieldState.invalid}
+                      className="w-full max-w-1/2"
+                    >
+                      <FieldLabel>Invoice Status</FieldLabel>
+                      <Select
+                        items={statuses}
+                        value={field.value}
+                        onValueChange={field.onChange}
+                      >
+                        <SelectTrigger aria-invalid={fieldState.invalid}>
+                          <SelectValue placeholder="Invoice Satuts" />
+                        </SelectTrigger>
+                        <SelectContent alignItemWithTrigger>
+                          {statuses.map((statusItem) => (
+                            <SelectItem
+                              key={statusItem.value}
+                              value={statusItem.value}
+                            >
+                              {statusItem.label}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </Field>
+                  )}
+                />
+
+                <Controller
+                  name="due_date"
+                  control={form.control}
+                  render={({ field, fieldState }) => {}}
+                />
+              </FieldGroup>
+            </form>
+          </div>
+        </DialogContent>
+      </Dialog>
+    </div>
   );
 }

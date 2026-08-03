@@ -5,7 +5,8 @@ import {  TrendingUpIcon } from 'lucide-react';
 import { Separator } from '@/components/ui/separator';
 
 import { ChartLineLabel } from './revenuechart';
-import { CreateInvoice } from './createInvoice';
+import CreateInvoice from "./createInvoice";
+
 
 export default function InvoiceOverview() {
    

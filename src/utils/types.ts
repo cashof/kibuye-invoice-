@@ -36,10 +36,8 @@ export const onboardingcompanySchema = z.object({
 
 export const invoiceItemSchema = z.object({
   name: z.string().min(1, "Item name is required"),
-
-  quantity: z.coerce.number().int().min(1, "Quantity must be at least 1"),
-
-  price: z.coerce.number().min(0.01, "Price must be greater than 0"),
+  quantity: z.number().int().min(1, "Quantity must be at least 1"),
+  price: z.number().min(0.01, "Price must be greater than 0"),
 });
 
 export const invoiceSchema = z.object({
@@ -48,7 +46,7 @@ export const invoiceSchema = z.object({
   due_date: z.string().min(1, "Due date is required"),
   status: z.enum(["draft", "sent", "paid", "cancelled"]).default("draft"),
   items: z.array(invoiceItemSchema).min(1, "Add at least one item"),
-  totalAmount: z.coerce.number().optional(),
+  totalAmount: z.number().optional(),
 });
 
 export type InvoiceItemType = z.infer<typeof invoiceItemSchema>;

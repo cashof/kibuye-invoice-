@@ -1,10 +1,12 @@
 "use client";
 
 import * as React from "react";
+import { Controller, useFieldArray, useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { PlusCircle, Trash2 } from "lucide-react";
 
 import { useIsMobile } from "@/hooks/use-mobile";
 
-import { Button } from "@/components/ui/button";
 import {
   Drawer,
   DrawerClose,
@@ -16,11 +18,9 @@ import {
   DrawerTrigger,
 } from "@/components/ui/drawer";
 
-import { toast } from "@/components/ui/toast";
-import { PlusCircle } from "lucide-react";
-import { Controller, useForm } from "react-hook-form";
-import { invoiceSchema, invoiceType } from "@/utils/types";
-import { zodResolver } from "@hookform/resolvers/zod";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import { Separator } from "@/components/ui/separator";
 import {
   Field,
@@ -28,125 +28,288 @@ import {
   FieldGroup,
   FieldLabel,
 } from "@/components/ui/field";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
+
+import { toast } from "@/components/ui/toast";
+
+import { invoiceSchema, invoiceType } from "@/utils/types";
+
+const defaultInvoiceValues: invoiceType = {
+  invoiceNumber: undefined as unknown as number,
+  invoiceDescription: "",
+  due_date: "",
+  status: "draft",
+  totalAmount: 0,
+  items: [
+    {
+      name: "",
+      quantity: 1,
+      price: 0,
+    },
+  ],
+};
 
 export function CreateInvoice() {
   const [open, setOpen] = React.useState(false);
 
   const isMobile = useIsMobile();
+
   const form = useForm<invoiceType>({
-    mode: "onBlur",
     resolver: zodResolver(invoiceSchema),
-    defaultValues: {
-      due_date: "",
-      invoiceNumber: "",
-      items: [],
-      status: undefined,
-      totalAmount: undefined,
-      invoiceDescription: "",
-    },
+    mode: "onBlur",
+    defaultValues: defaultInvoiceValues,
   });
 
+  const { fields, append, remove } = useFieldArray({
+    control: form.control,
+    name: "items",
+  });
+
+  const items = form.watch("items");
+
+  React.useEffect(() => {
+    const total = items.reduce(
+      (sum, item) =>
+        sum + (Number(item.quantity) || 0) * (Number(item.price) || 0),
+      0,
+    );
+
+    form.setValue("totalAmount", total);
+  }, [items, form]);
+
   function onSubmit(data: invoiceType) {
-    setOpen(false);
+    console.log(data);
+
     toast.add({
-      title: "Delivery time confirmed",
-      description: (
-        <pre className="mt-2  overflow-x-auto rounded-md bg-code p-4 text-code-foreground">
-          <code>{JSON.stringify(data, null, 2)}</code>
-        </pre>
-      ),
+      title: "Invoice created",
+      description: "Invoice saved successfully.",
     });
+
+    form.reset(defaultInvoiceValues);
+    setOpen(false);
+  }
+
+  function handleOpenChange(next: boolean) {
+    if (!next) {
+      form.reset(defaultInvoiceValues);
+    }
+    setOpen(next);
   }
 
   return (
     <Drawer
       open={open}
-      onOpenChange={setOpen}
+      onOpenChange={handleOpenChange}
       showSwipeHandle={isMobile}
       swipeDirection={isMobile ? "down" : "right"}
     >
-      <form onClick={form.handleSubmit(onSubmit)}>
-        <DrawerTrigger
-          render={
-            <Button variant="default">
-              Create Invoice <PlusCircle size={12} />
-            </Button>
-          }
-        />
-        <DrawerContent className="md:w-1/2 py-4">
-          <DrawerHeader>
-            <DrawerTitle>Create and share Invoices</DrawerTitle>
-            <DrawerDescription>
-              Through this you can generate share and download invoices at the
-              same time
-            </DrawerDescription>
-          </DrawerHeader>
-          <Separator className="my-4" />
+      <DrawerTrigger
+        render={
+          <Button>
+            Create Invoice
+            <PlusCircle size={15} />
+          </Button>
+        }
+      />
 
-          <div className="flex-1 scroll overflow-y-auto gap-4">
-            <FieldGroup>
-              <Controller
-                name="invoiceNumber"
-                control={form.control}
-                render={({ field, fieldState }) => (
-                  <Field data-invalid={fieldState.invalid}>
-                    <div className=" flex flex-col md:flex-row md:items-center justify-center md:justify-between">
-                      <FieldLabel htmlFor={field.name}>
-                        Invoice Number
-                      </FieldLabel>
-                      <div className="md:w-2/3">
-                        <Input
-                          {...field}
-                          id={field.name}
-                          aria-invalid={fieldState.invalid}
-                          placeholder="123"
-                        />
-                        {fieldState.invalid && (
-                          <FieldError errors={[fieldState.error]} />
-                        )}
-                      </div>
-                    </div>
-                  </Field>
-                )}
-              />
-            </FieldGroup>
+      <DrawerContent className="md:w-1/2 py-4">
+        <DrawerHeader>
+          <DrawerTitle>Create Invoice</DrawerTitle>
+          <DrawerDescription>
+            Create, download and share invoices.
+          </DrawerDescription>
+        </DrawerHeader>
 
-            <FieldGroup>
-              <Controller
-                name="invoiceDescription"
-                control={form.control}
-                render={({ field, fieldState }) => (
-                  <Field data-invalid={fieldState.invalid}>
-                    <div className=" flex flex-col md:flex-row md:items-center justify-center md:justify-between">
-                      <FieldLabel htmlFor={field.name}>
-                        Invoice Description (optional)
-                      </FieldLabel>
-                      <div className="md:w-2/3">
-                        <Input
-                          {...field}
-                          id={field.name}
-                          aria-invalid={fieldState.invalid}
-                        />
-                        {fieldState.invalid && (
+        <Separator />
+
+        <form
+          onSubmit={form.handleSubmit(onSubmit)}
+          className="flex h-full flex-col"
+        >
+          <div className="flex-1 space-y-6 overflow-y-auto p-4">
+            {/* Invoice Number */}
+            <Controller
+              control={form.control}
+              name="invoiceNumber"
+              render={({ field, fieldState }) => (
+                <Field data-invalid={fieldState.invalid}>
+                  <FieldLabel>Invoice Number</FieldLabel>
+
+                  <Input
+                    name={field.name}
+                    ref={field.ref}
+                    onBlur={field.onBlur}
+                    type="number"
+                    placeholder="1001"
+                    value={field.value ?? ""}
+                    onChange={(e) =>
+                      field.onChange(
+                        e.target.value === ""
+                          ? undefined
+                          : e.target.valueAsNumber,
+                      )
+                    }
+                  />
+
+                  <FieldError errors={[fieldState.error]} />
+                </Field>
+              )}
+            />
+
+            {/* Due Date */}
+            <Controller
+              control={form.control}
+              name="due_date"
+              render={({ field, fieldState }) => (
+                <Field data-invalid={fieldState.invalid}>
+                  <FieldLabel>Due Date</FieldLabel>
+
+                  <Input {...field} type="date" />
+
+                  <FieldError errors={[fieldState.error]} />
+                </Field>
+              )}
+            />
+
+            {/* Description */}
+            <Controller
+              control={form.control}
+              name="invoiceDescription"
+              render={({ field, fieldState }) => (
+                <Field data-invalid={fieldState.invalid}>
+                  <FieldLabel>Description</FieldLabel>
+
+                  <Textarea
+                    {...field}
+                    rows={4}
+                    placeholder="Describe this invoice..."
+                  />
+
+                  <FieldError errors={[fieldState.error]} />
+                </Field>
+              )}
+            />
+
+            <Separator />
+
+            <div className="space-y-4">
+              <h3 className="font-semibold">Invoice Items</h3>
+
+              {fields.map((item, index) => (
+                <FieldGroup key={item.id} className="rounded-lg border p-4">
+                  <Controller
+                    control={form.control}
+                    name={`items.${index}.name`}
+                    render={({ field, fieldState }) => (
+                      <Field data-invalid={fieldState.invalid}>
+                        <FieldLabel>Name</FieldLabel>
+
+                        <Input {...field} />
+
+                        <FieldError errors={[fieldState.error]} />
+                      </Field>
+                    )}
+                  />
+
+                  <div className="grid grid-cols-2 gap-4 mt-4">
+                    <Controller
+                      control={form.control}
+                      name={`items.${index}.quantity`}
+                      render={({ field, fieldState }) => (
+                        <Field data-invalid={fieldState.invalid}>
+                          <FieldLabel>Quantity</FieldLabel>
+
+                          <Input
+                            name={field.name}
+                            ref={field.ref}
+                            onBlur={field.onBlur}
+                            type="number"
+                            value={Number.isNaN(field.value) ? "" : field.value}
+                            onChange={(e) =>
+                              field.onChange(
+                                e.target.value === ""
+                                  ? ""
+                                  : e.target.valueAsNumber,
+                              )
+                            }
+                          />
+
                           <FieldError errors={[fieldState.error]} />
-                        )}
-                      </div>
-                    </div>
-                  </Field>
-                )}
-              />
-            </FieldGroup>
+                        </Field>
+                      )}
+                    />
+
+                    <Controller
+                      control={form.control}
+                      name={`items.${index}.price`}
+                      render={({ field, fieldState }) => (
+                        <Field data-invalid={fieldState.invalid}>
+                          <FieldLabel>Price</FieldLabel>
+
+                          <Input
+                            name={field.name}
+                            ref={field.ref}
+                            onBlur={field.onBlur}
+                            type="number"
+                            step="0.01"
+                            value={Number.isNaN(field.value) ? "" : field.value}
+                            onChange={(e) =>
+                              field.onChange(
+                                e.target.value === ""
+                                  ? ""
+                                  : e.target.valueAsNumber,
+                              )
+                            }
+                          />
+
+                          <FieldError errors={[fieldState.error]} />
+                        </Field>
+                      )}
+                    />
+                  </div>
+
+                  <Button
+                    type="button"
+                    variant="destructive"
+                    size="sm"
+                    className="mt-4"
+                    disabled={fields.length === 1}
+                    onClick={() => remove(index)}
+                  >
+                    <Trash2 className="mr-2 h-4 w-4" />
+                    Remove
+                  </Button>
+                </FieldGroup>
+              ))}
+
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() =>
+                  append({
+                    name: "",
+                    quantity: 1,
+                    price: 0,
+                  })
+                }
+              >
+                Add Item
+              </Button>
+            </div>
+
+            <Field>
+              <FieldLabel>Total</FieldLabel>
+
+              <Input value={form.watch("totalAmount")} readOnly />
+            </Field>
           </div>
 
-          <DrawerFooter className="flex flex-row justify-end-safe items-center">
+          <DrawerFooter className="flex-row justify-end gap-2">
             <DrawerClose render={<Button variant="outline">Cancel</Button>} />
-            <Button type="submit">Save</Button>
-            <Button>Save and share</Button>
+
+            <Button type="submit">Save Invoice</Button>
           </DrawerFooter>
-        </DrawerContent>
-      </form>
+        </form>
+      </DrawerContent>
     </Drawer>
   );
 }

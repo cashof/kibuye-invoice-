@@ -24,14 +24,12 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { Separator } from "@/components/ui/separator";
 import {
   Field,
-  FieldContent,
-  FieldDescription,
   FieldError,
   FieldGroup,
   FieldLabel,
-  FieldSet,
 } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 
 export function CreateInvoice() {
   const [open, setOpen] = React.useState(false);
@@ -42,7 +40,7 @@ export function CreateInvoice() {
     resolver: zodResolver(invoiceSchema),
     defaultValues: {
       due_date: "",
-      invoiceNumber: undefined,
+      invoiceNumber: "",
       items: [],
       status: undefined,
       totalAmount: undefined,
@@ -50,23 +48,17 @@ export function CreateInvoice() {
     },
   });
 
- 
-     function onSubmit(data: invoiceType) {
-      
-
+  function onSubmit(data: invoiceType) {
     setOpen(false);
     toast.add({
       title: "Delivery time confirmed",
       description: (
-           <pre className="mt-2  overflow-x-auto rounded-md bg-code p-4 text-code-foreground">
-             <code>{JSON.stringify(data, null, 2)}</code>
-           </pre>
-         ),
-    
-        
+        <pre className="mt-2  overflow-x-auto rounded-md bg-code p-4 text-code-foreground">
+          <code>{JSON.stringify(data, null, 2)}</code>
+        </pre>
+      ),
     });
-}
-
+  }
 
   return (
     <Drawer
@@ -93,29 +85,58 @@ export function CreateInvoice() {
           </DrawerHeader>
           <Separator className="my-4" />
 
-          <div className="flex-1 scroll overflow-y-auto p-4">
+          <div className="flex-1 scroll overflow-y-auto gap-4">
             <FieldGroup>
               <Controller
                 name="invoiceNumber"
                 control={form.control}
                 render={({ field, fieldState }) => (
                   <Field data-invalid={fieldState.invalid}>
-      
                     <div className=" flex flex-col md:flex-row md:items-center justify-center md:justify-between">
-                      <FieldLabel htmlFor={field.name}>Invoice Number</FieldLabel>
+                      <FieldLabel htmlFor={field.name}>
+                        Invoice Number
+                      </FieldLabel>
                       <div className="md:w-2/3">
                         <Input
-                        {...field}
-                        id={field.name}
-                        aria-invalid={fieldState.invalid}
-                         placeholder="123" />
-                        {fieldState.invalid && <FieldError errors={[fieldState.error]}/>}
+                          {...field}
+                          id={field.name}
+                          aria-invalid={fieldState.invalid}
+                          placeholder="123"
+                        />
+                        {fieldState.invalid && (
+                          <FieldError errors={[fieldState.error]} />
+                        )}
                       </div>
                     </div>
                   </Field>
                 )}
               />
-              
+            </FieldGroup>
+
+            <FieldGroup>
+              <Controller
+                name="invoiceDescription"
+                control={form.control}
+                render={({ field, fieldState }) => (
+                  <Field data-invalid={fieldState.invalid}>
+                    <div className=" flex flex-col md:flex-row md:items-center justify-center md:justify-between">
+                      <FieldLabel htmlFor={field.name}>
+                        Invoice Description (optional)
+                      </FieldLabel>
+                      <div className="md:w-2/3">
+                        <Input
+                          {...field}
+                          id={field.name}
+                          aria-invalid={fieldState.invalid}
+                        />
+                        {fieldState.invalid && (
+                          <FieldError errors={[fieldState.error]} />
+                        )}
+                      </div>
+                    </div>
+                  </Field>
+                )}
+              />
             </FieldGroup>
           </div>
 

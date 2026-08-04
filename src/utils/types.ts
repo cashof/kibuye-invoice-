@@ -38,13 +38,14 @@ export const invoiceItemSchema = z.object({
 export const invoiceSchema = z.object({
   status: z.enum(["draft", "sent", "paid", "cancelled"]),
   totalAmount: z.number().min(1, "Amount is required"),
-  due_date: z.string().min(1, "Due date is required"),
+  due_date: z.date().min(1, "Due date is required"),
   invoiceNumber: z.number(),
   invoiceDescription: z
     .string("invoice_descirption")
     .min(5, "provide more infomation")
     .max(100, "Think this is enough"),
   items: z.array(invoiceItemSchema).min(1, "Add at least one item"),
+  client_id: z.string().max(1, "please select the user"),
 });
 
 export type invoiceType = z.infer<typeof invoiceSchema>;

@@ -1,23 +1,36 @@
-import { Badge } from '@/components/ui/badge';
-import { Card, CardAction, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card'
-import {  TrendingUpIcon } from 'lucide-react';
+"use client";
+import { Badge } from "@/components/ui/badge";
+import {
+  Card,
+  CardAction,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Plus, TrendingUpIcon } from "lucide-react";
 
-import { Separator } from '@/components/ui/separator';
+import { Separator } from "@/components/ui/separator";
 
-import { ChartLineLabel } from './revenuechart';
+import { ChartLineLabel } from "./revenuechart";
 import CreateInvoice from "./createInvoice";
-
+import { Button } from "@/components/ui/button";
+import Link from "next/link";
 
 export default function InvoiceOverview() {
-   
   return (
     <div>
-        <Separator/>
-        <div className=" py-4 flex flex-row justify-between items-center">
-            <h1 className='text-2xl'>Invoice</h1>
-            <CreateInvoice/>
-        </div>
-        <Separator/>
+      <Separator />
+      <div className=" py-4 flex flex-row justify-between items-center">
+        <h1 className="text-2xl">Invoice</h1>
+        <Button>
+          <Link href={"/dashboard/invoice/create"}>
+            Create Invoice <Plus />
+          </Link>
+        </Button>
+      </div>
+      <Separator />
 
       <div className="grid md:grid-cols-3 gap-4 p-4">
         <Card>
@@ -77,7 +90,7 @@ export default function InvoiceOverview() {
       </div>
 
       <div className="">
-        <ChartLineLabel/>
+        <ChartLineLabel />
       </div>
     </div>
   );

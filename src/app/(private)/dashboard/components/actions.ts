@@ -1,4 +1,5 @@
 "use server";
+
 import { company } from "@/db/schema";
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
@@ -25,4 +26,17 @@ export async function userCompany() {
     success: true,
     data: result[0] || null, // Grabs the first item from the array safely
   };
+}
+
+export async function GetClients() {
+  const result = await userCompany();
+
+  if (!result.success || !result.data) {
+    throw new Error("Company not found");
+  }
+
+  return await db.query.clients.findMany({
+    where: eq(clients.companyId, result.data.id),
+    orderBy: (clients, { asc }) => [asc(clients.name)],
+  });
 }
